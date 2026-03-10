@@ -1,4 +1,5 @@
 import cv2
+from cv2 import dnn_superres
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
@@ -15,6 +16,8 @@ BONES = [
 
 LEFT_WRIST = 15
 RIGHT_WRIST = 16
+LEFT_ELBOW = 13
+RIGHT_ElBOW = 14
 
 def setup_landmarker(pose_path, hand_path):
     # Base model options
@@ -57,6 +60,11 @@ def setup_landmarker(pose_path, hand_path):
 
 
 def main(video_path):
+    sr = dnn_superres.DnnSuperResImpl_create()
+    sr.readModel("models/EDSR_x4.pb")
+    print("Model loaded")
+    sr.setModel("edsr", 4)
+
     left_hand_roi = None
 
     right_hand_roi = None
@@ -103,6 +111,8 @@ def main(video_path):
 
             left_wrist = pose_results.pose_landmarks[0][LEFT_WRIST]
             right_wrist = pose_results.pose_landmarks[0][RIGHT_WRIST]
+            left_elbow = pose_results.pose_landmarks[0][LEFT_ELBOW]
+            right_elbow = pose_results.pose_landmarks[0][RIGHT_ElBOW]
 
             # initialize LEFT ROI
             # LEFT HAND
@@ -112,10 +122,12 @@ def main(video_path):
                 left_hand_roi, left_hand_data = initialize_hand_roi(
                     frame,
                     left_wrist,
+                    left_elbow,
                     left_hand_landmarker,
                     frame_index,
                     width,
-                    height
+                    height,
+                    sr
                 )
 
             elif left_hand_roi is not None:
@@ -140,10 +152,12 @@ def main(video_path):
                 right_hand_roi, right_hand_data = initialize_hand_roi(
                     frame,
                     right_wrist,
+                    right_elbow,
                     right_hand_landmarker,
                     frame_index,
                     width,
-                    height
+                    height,
+                    sr
                 )
 
             elif right_hand_roi is not None:
@@ -181,4 +195,4 @@ def main(video_path):
 
 
 if __name__ == "__main__":
-    main("./data/still.mp4")
+    main("./data/moonboard.mp4")
