@@ -1,10 +1,10 @@
 import cv2
-from cv2 import dnn_superres
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import json
-from roi_tracker import initialize_hand_roi, compute_roi
+from roi_tracker import initialize_hand_roi
+from cnn import model
 
 BONES = [
     (0, 1), (1, 2), (2, 3),  # right leg
@@ -18,6 +18,7 @@ LEFT_WRIST = 15
 RIGHT_WRIST = 16
 LEFT_ELBOW = 13
 RIGHT_ElBOW = 14
+
 
 def setup_landmarker(pose_path, hand_path):
     # Base model options
@@ -58,15 +59,11 @@ def setup_landmarker(pose_path, hand_path):
     return pose_landmarker, left_hand_landmarker, right_hand_landmarker
 
 
-
 def main(video_path):
-    sr = dnn_superres.DnnSuperResImpl_create()
-    sr.readModel("models/EDSR_x4.pb")
-    print("Model loaded")
-    sr.setModel("edsr", 4)
+    left_wrist = None
+    right_wrist = None
 
     left_hand_roi = None
-
     right_hand_roi = None
 
     left_hand_data = None
@@ -74,7 +71,8 @@ def main(video_path):
 
     frame_index = 0
 
-    pose_landmarker, left_hand_landmarker, right_hand_landmarker = setup_landmarker("./models/pose_landmarker_lite.task","./models/hand_landmarker.task")
+    pose_landmarker, left_hand_landmarker, right_hand_landmarker = setup_landmarker(
+        "./models/pose_landmarker_lite.task", "./models/hand_landmarker.task")
 
     capture = cv2.VideoCapture(video_path)
 
@@ -114,65 +112,14 @@ def main(video_path):
             left_elbow = pose_results.pose_landmarks[0][LEFT_ELBOW]
             right_elbow = pose_results.pose_landmarks[0][RIGHT_ElBOW]
 
-            # initialize LEFT ROI
-            # LEFT HAND
+            if frame_index % 10 == 0:
+                left_hand_roi = initialize_hand_roi(frame, left_wrist, left_elbow, width, height)
+                right_hand_roi = initialize_hand_roi(frame, right_wrist, right_elbow, width, height)
 
-            if left_hand_roi is None and left_wrist:
-
-                left_hand_roi, left_hand_data = initialize_hand_roi(
-                    frame,
-                    left_wrist,
-                    left_elbow,
-                    left_hand_landmarker,
-                    frame_index,
-                    width,
-                    height,
-                    sr
-                )
-
-            elif left_hand_roi is not None:
-
-                left_hand_data = compute_roi(
-                    left_hand_roi,
-                    frame,
-                    left_hand_landmarker,
-                    height,
-                    width,
-                    frame_index
-                )
-
-                if left_hand_data is None:
-                    left_hand_roi = None
-
-            # initialize right ROI
-            # LEFT HAND
-
-            if right_hand_roi is None and right_wrist:
-
-                right_hand_roi, right_hand_data = initialize_hand_roi(
-                    frame,
-                    right_wrist,
-                    right_elbow,
-                    right_hand_landmarker,
-                    frame_index,
-                    width,
-                    height,
-                    sr
-                )
-
-            elif right_hand_roi is not None:
-
-                right_hand_data = compute_roi(
-                    right_hand_roi,
-                    frame,
-                    right_hand_landmarker,
-                    height,
-                    width,
-                    frame_index
-                )
-
-                if right_hand_data is None:
-                    left_hand_roi = None
+                if left_hand_roi:
+                    left_grip = model(left_hand_roi)
+                if right_hand_roi:
+                    right_grip = model(right_hand_roi)
 
             frame_data["LeftHand"] = left_hand_data
             frame_data["RightHand"] = right_hand_data
