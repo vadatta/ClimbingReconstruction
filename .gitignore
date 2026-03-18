@@ -1,0 +1,17 @@
+# Node
+node_modules/
+
+# Data
+data/
+dataset/
+
+# Models
+models/
+
+# macOS
+.DS_Store
+
+# Generated images
+roi_debug.png
+roi_frame.png
+
