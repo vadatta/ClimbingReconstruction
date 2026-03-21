@@ -1,5 +1,9 @@
 import math
 
+from PIL import Image
+
+from cnn import val_transform, device
+
 import cv2
 
 
@@ -52,10 +56,15 @@ def initialize_hand_roi(frame, wrist, elbow, width, height):
     ymax = min(height, max(y1, y2, y3, y4))
 
     roi_frame = frame[ymin:ymax, xmin:xmax]
-    if frame_index % 8 == 0:
-        roi_frame = frame[ymin:ymax, xmin:xmax]
-        roi = cv2.resize(roi_frame, (128, 128))
+    roi_rgb = cv2.cvtColor(roi_frame, cv2.COLOR_BGR2RGB)
+    roi_pil = Image.fromarray(roi_rgb)
 
-        cv2.imwrite(f"dataset/raw/frameM_{frame_index}.png", roi)
+    input_tensor = val_transform(roi_pil).unsqueeze(0)
+    input_tensor = input_tensor.to(device)
+    #if frame_index % 8 == 0:
+        #roi_frame = frame[ymin:ymax, xmin:xmax]
+        #roi = cv2.resize(roi_frame, (128, 128))
 
-    return hand_roi
+        #cv2.imwrite(f"dataset/raw/frameM_{frame_index}.png", roi)
+
+    return input_tensor

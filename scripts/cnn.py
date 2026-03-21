@@ -6,18 +6,44 @@ import torch.nn as nn
 import torchvision.models as models
 
 
-transform = transforms.Compose([
-    transforms.Resize((128,128)),
-    transforms.ColorJitter(brightness=0.2, contrast=0.2),
+train_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+
+    transforms.ColorJitter(
+        brightness=0.2,
+        contrast=0.2,
+        saturation=0.2,
+        hue=0.05
+    ),
+
     transforms.GaussianBlur(3),
-    transforms.ToTensor()
+
+    transforms.ToTensor(),
+
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std =[0.229, 0.224, 0.225]
+    )
 ])
 
-dataset = ImageFolder("dataset", transform=transform)
+val_transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+
+    transforms.ToTensor(),
+
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std =[0.229, 0.224, 0.225]
+    )
+])
+
+dataset = ImageFolder("dataset")
 train_size = int(0.8 * len(dataset))
 val_size = len(dataset) - train_size
 
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+train_dataset.dataset.transform = train_transform
+val_dataset.dataset.transform = val_transform
 
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=32)

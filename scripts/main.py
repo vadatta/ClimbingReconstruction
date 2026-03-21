@@ -14,6 +14,8 @@ BONES = [
     (8, 14), (14, 15), (15, 16)  # right arm
 ]
 
+labels = {0: "Crimp", 1: "None", 2: "Pinch", 3: "Sloper"}
+
 LEFT_WRIST = 15
 RIGHT_WRIST = 16
 LEFT_ELBOW = 13
@@ -60,11 +62,6 @@ def setup_landmarker(pose_path, hand_path):
 
 
 def main(video_path):
-    left_wrist = None
-    right_wrist = None
-
-    left_hand_roi = None
-    right_hand_roi = None
 
     left_hand_data = None
     right_hand_data = None
@@ -116,10 +113,13 @@ def main(video_path):
                 left_hand_roi = initialize_hand_roi(frame, left_wrist, left_elbow, width, height)
                 right_hand_roi = initialize_hand_roi(frame, right_wrist, right_elbow, width, height)
 
-                if left_hand_roi:
+                if left_hand_roi is not None:
                     left_grip = model(left_hand_roi)
-                if right_hand_roi:
+                    left_class = left_grip.argmax(dim=1).item()
+                    print(labels[left_class])
+                if right_hand_roi is not None:
                     right_grip = model(right_hand_roi)
+                    #print("right_grip " + right_grip)
 
             frame_data["LeftHand"] = left_hand_data
             frame_data["RightHand"] = right_hand_data
