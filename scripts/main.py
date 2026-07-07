@@ -4,7 +4,8 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import json
 from roi_tracker import initialize_hand_roi
-from cnn import model
+from config import CONFIG
+from model import GripResNet
 
 BONES = [
     (0, 1), (1, 2), (2, 3),  # right leg
@@ -15,6 +16,8 @@ BONES = [
 ]
 
 labels = {0: "Crimp", 1: "None", 2: "Pinch", 3: "Sloper"}
+model = GripResNet(num_classes=len(labels)).to(CONFIG["device"])
+model.eval()
 
 LEFT_WRIST = 15
 RIGHT_WRIST = 16
@@ -59,6 +62,13 @@ def setup_landmarker(pose_path, hand_path):
     right_hand_landmarker = vision.HandLandmarker.create_from_options(hand_options)
 
     return pose_landmarker, left_hand_landmarker, right_hand_landmarker
+
+def getGripData(gripClass, left):
+    if left:
+        data = leftHandMappings[gripClass]
+    else:
+        data = rightHandMappings[gripClass]
+    return data
 
 
 def main(video_path):
@@ -115,11 +125,12 @@ def main(video_path):
 
                 if left_hand_roi is not None:
                     left_grip = model(left_hand_roi)
-                    left_class = left_grip.argmax(dim=1).item()
-                    print(labels[left_class])
+                    left_class = labels[left_grip.argmax(dim=1).item()]
+                    left_hand_data = getGripData(left_class, True)
                 if right_hand_roi is not None:
                     right_grip = model(right_hand_roi)
-                    #print("right_grip " + right_grip)
+                    right_class = labels[right_grip.argmax(dim=1).item()]
+                    right_hand_data = getGripData(right_class, False)
 
             frame_data["LeftHand"] = left_hand_data
             frame_data["RightHand"] = right_hand_data

@@ -2,7 +2,8 @@ import math
 
 from PIL import Image
 
-from cnn import val_transform, device
+from config import CONFIG
+from dataCleaning import val_transform
 
 import cv2
 
@@ -60,7 +61,7 @@ def initialize_hand_roi(frame, wrist, elbow, width, height):
     roi_pil = Image.fromarray(roi_rgb)
 
     input_tensor = val_transform(roi_pil).unsqueeze(0)
-    input_tensor = input_tensor.to(device)
+    input_tensor = input_tensor.to(CONFIG["device"])
     #if frame_index % 8 == 0:
         #roi_frame = frame[ymin:ymax, xmin:xmax]
         #roi = cv2.resize(roi_frame, (128, 128))
