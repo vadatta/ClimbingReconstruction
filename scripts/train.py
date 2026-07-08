@@ -47,12 +47,20 @@ def train(model, optimizer, loss, train_loader, val_loader, num_epochs):
     return accuracy
 
 
-if __name__ == "__main__":
-    train_loader, val_loader, classes = create_dataloaders()
+def train_with_blur_kernel(gaussian_blur_kernel):
+    torch.manual_seed(CONFIG["seed"])
+
+    train_loader, val_loader, classes = create_dataloaders(
+        batch_size=CONFIG["batch_size"],
+        train_ratio=CONFIG["train_ratio"],
+        rotation_degrees=CONFIG["rotation_degrees"],
+        gaussian_blur_kernel=gaussian_blur_kernel,
+        seed=CONFIG["seed"]
+    )
     model = GripResNet(num_classes=len(classes))
     optimizer = create_optimizer(model)
 
-    train(
+    return train(
         model=model,
         optimizer=optimizer,
         loss=CONFIG["loss"],
@@ -60,3 +68,16 @@ if __name__ == "__main__":
         val_loader=val_loader,
         num_epochs=CONFIG["num_epochs"]
     )
+
+
+if __name__ == "__main__":
+    results = {}
+
+    for gaussian_blur_kernel in CONFIG["gaussian_blur_kernels"]:
+        print(f"training with gaussian_blur_kernel={gaussian_blur_kernel}")
+        results[gaussian_blur_kernel] = train_with_blur_kernel(gaussian_blur_kernel)
+
+    best_kernel = max(results, key=results.get)
+    print("blur results:", results)
+    print("best gaussian_blur_kernel:", best_kernel)
+    print("best accuracy:", results[best_kernel])

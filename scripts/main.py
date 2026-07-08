@@ -63,18 +63,18 @@ def setup_landmarker(pose_path, hand_path):
 
     return pose_landmarker, left_hand_landmarker, right_hand_landmarker
 
-def getGripData(gripClass, left):
-    if left:
-        data = leftHandMappings[gripClass]
-    else:
-        data = rightHandMappings[gripClass]
-    return data
+#def getGripData(gripClass, left):
+    #if left:
+        #data = leftHandMappings[gripClass]
+    #else:
+        #data = rightHandMappings[gripClass]
+    #return data
 
 
 def main(video_path):
 
-    left_hand_data = None
-    right_hand_data = None
+    left_grip_label = "Unknown"
+    right_grip_label = "Unknown"
 
     frame_index = 0
 
@@ -125,15 +125,17 @@ def main(video_path):
 
                 if left_hand_roi is not None:
                     left_grip = model(left_hand_roi)
-                    left_class = labels[left_grip.argmax(dim=1).item()]
-                    left_hand_data = getGripData(left_class, True)
+                    left_grip_label = labels[left_grip.argmax(dim=1).item()]
+                    #left_hand_data = getGripData(left_class, True)
                 if right_hand_roi is not None:
                     right_grip = model(right_hand_roi)
-                    right_class = labels[right_grip.argmax(dim=1).item()]
-                    right_hand_data = getGripData(right_class, False)
+                    right_grip_label = labels[right_grip.argmax(dim=1).item()]
+                    #right_hand_data = getGripData(right_class, False)
 
-            frame_data["LeftHand"] = left_hand_data
-            frame_data["RightHand"] = right_hand_data
+            #frame_data["LeftHand"] = left_hand_data
+            #frame_data["RightHand"] = right_hand_data
+            frame_data["LeftGrip"] = left_grip_label
+            frame_data["RightGrip"] = right_grip_label
             frames.append(frame_data)
         frame_index += 1
 
@@ -153,4 +155,4 @@ def main(video_path):
 
 
 if __name__ == "__main__":
-    main("./data/moonboard.mp4")
+    main("./data/j.mp4")

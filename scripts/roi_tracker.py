@@ -17,7 +17,7 @@ def initialize_hand_roi(frame, wrist, elbow, width, height):
 
     forearm_len = math.sqrt(forearm_x**2 + forearm_y**2)
     if forearm_len < 1e-6:
-        return None, None
+        return None
     x_direc = forearm_x / forearm_len
     y_direc = forearm_y / forearm_len
 
