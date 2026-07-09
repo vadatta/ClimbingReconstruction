@@ -1,0 +1,225 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    color: #edf2ff;
+    background: #07090d;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button,
+input {
+    font: inherit;
+}
+
+#app-shell {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-rows: 68px minmax(0, 1fr) 72px;
+    grid-template-areas:
+        "topbar topbar"
+        "sidebar viewer"
+        "timeline timeline";
+    width: 100vw;
+    height: 100vh;
+    background: #080b12;
+}
+
+#topbar {
+    grid-area: topbar;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 0 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0d111a;
+}
+
+.brand {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    margin-top: 3px;
+    color: #8f9bb3;
+    font-size: 12px;
+}
+
+.session-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #c8d2e8;
+    font-size: 13px;
+}
+
+.session-meta span {
+    padding: 6px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+#sidebar {
+    grid-area: sidebar;
+    padding: 18px;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0a0e15;
+    overflow: auto;
+}
+
+.panel-section {
+    margin-bottom: 24px;
+}
+
+.section-label {
+    margin-bottom: 10px;
+    color: #8f9bb3;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.upload-button,
+.control-button {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #f5f7ff;
+    background: #2563eb;
+    cursor: pointer;
+}
+
+.upload-button {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+}
+
+.attempt-list {
+    display: grid;
+    gap: 8px;
+}
+
+.attempt-row,
+.detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.035);
+    font-size: 13px;
+}
+
+.attempt-row {
+    justify-content: flex-start;
+}
+
+.attempt-row.muted {
+    color: #8f9bb3;
+}
+
+.attempt-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+}
+
+.attempt-color-primary {
+    background: #38bdf8;
+}
+
+.attempt-color-secondary {
+    background: #fb923c;
+}
+
+.attempt-color-tertiary {
+    background: #4ade80;
+}
+
+.detail-row {
+    margin-bottom: 8px;
+    color: #9ba7bd;
+}
+
+.detail-row strong {
+    color: #edf2ff;
+    font-weight: 600;
+}
+
+#viewer {
+    grid-area: viewer;
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #111827 0%, #06080c 68%);
+}
+
+#viewer canvas {
+    display: block;
+}
+
+.viewer-label {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    z-index: 2;
+    color: #96a3b9;
+    font-size: 12px;
+    pointer-events: none;
+}
+
+.grip-overlay {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    z-index: 3;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    color: white;
+    background: rgba(0, 0, 0, 0.55);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    pointer-events: none;
+}
+
+#timeline {
+    grid-area: timeline;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #0d111a;
+}
+
+.control-button {
+    padding: 8px 14px;
+}
+
+.timeline-range {
+    flex: 1;
+}
+
+.timeline-meta {
+    min-width: 70px;
+    color: #9ba7bd;
+    font-size: 13px;
+    text-align: right;
+}

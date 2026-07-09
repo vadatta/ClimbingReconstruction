@@ -3,6 +3,8 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import json
+import numpy as np
+import sys
 from roi_tracker import initialize_hand_roi
 from config import CONFIG
 from model import GripResNet
@@ -63,16 +65,70 @@ def setup_landmarker(pose_path, hand_path):
 
     return pose_landmarker, left_hand_landmarker, right_hand_landmarker
 
-#def getGripData(gripClass, left):
-    #if left:
-        #data = leftHandMappings[gripClass]
-    #else:
-        #data = rightHandMappings[gripClass]
-    #return data
+MAX_ATTEMPTS = 3
+DEFAULT_VIDEO_PATHS = ["./data/data.mp4"]
+SESSION_METADATA = {
+    "board": {
+        "type": "MoonBoard",
+        "angle_degrees": 40
+    },
+    "climb": {
+        "name": "Prototype Climb",
+        "grade": "Unknown"
+    },
+    "calibration": {
+        "coordinate_system": "normalized_board_space",
+        "image_corners": {
+            "bottom_left": [120, 900],
+            "bottom_right": [820, 900],
+            "top_right": [820, 120],
+            "top_left": [120, 120]
+        },
+        "board_corners": {
+            "bottom_left": [0.0, 0.0],
+            "bottom_right": [1.0, 0.0],
+            "top_right": [1.0, 1.0],
+            "top_left": [0.0, 1.0]
+        }
+    }
+}
 
 
-def main(video_path):
+def ordered_corner_points(corners):
+    return np.float32([
+        corners["bottom_left"],
+        corners["bottom_right"],
+        corners["top_right"],
+        corners["top_left"]
+    ])
 
+
+def create_board_homography(session_metadata):
+    calibration = session_metadata["calibration"]
+    image_points = ordered_corner_points(calibration["image_corners"])
+    board_points = ordered_corner_points(calibration["board_corners"])
+
+    return cv2.getPerspectiveTransform(image_points, board_points)
+
+
+def transform_landmarks_to_board_space(landmarks, homography, width, height):
+    pixel_points = np.float32([
+        [[lm.x * width, lm.y * height]]
+        for lm in landmarks
+    ])
+    board_points = cv2.perspectiveTransform(pixel_points, homography)
+
+    return [
+        {
+            "x": float(point[0][0]),
+            "y": float(point[0][1]),
+            "z": lm.z
+        }
+        for point, lm in zip(board_points, landmarks)
+    ]
+
+
+def process_video(video_path, attempt_id, board_homography):
     left_grip_label = "Unknown"
     right_grip_label = "Unknown"
 
@@ -85,7 +141,7 @@ def main(video_path):
 
     if not capture.isOpened():
         print(f"Error: Could not open video file '{video_path}'")
-        return
+        return None
 
     frames = []
 
@@ -102,6 +158,7 @@ def main(video_path):
         pose_results = pose_landmarker.detect_for_video(image, frame_index)
 
         if pose_results.pose_landmarks:
+            pose_landmarks = pose_results.pose_landmarks[0]
             frame_data = {
                 "t": frame_index / 1000.0,
                 "landmarks": [
@@ -110,14 +167,20 @@ def main(video_path):
                         "y": lm.y,
                         "z": lm.z
                     }
-                    for lm in pose_results.pose_landmarks[0]
-                ]
+                    for lm in pose_landmarks
+                ],
+                "board_landmarks": transform_landmarks_to_board_space(
+                    pose_landmarks,
+                    board_homography,
+                    width,
+                    height
+                )
             }
 
-            left_wrist = pose_results.pose_landmarks[0][LEFT_WRIST]
-            right_wrist = pose_results.pose_landmarks[0][RIGHT_WRIST]
-            left_elbow = pose_results.pose_landmarks[0][LEFT_ELBOW]
-            right_elbow = pose_results.pose_landmarks[0][RIGHT_ElBOW]
+            left_wrist = pose_landmarks[LEFT_WRIST]
+            right_wrist = pose_landmarks[RIGHT_WRIST]
+            left_elbow = pose_landmarks[LEFT_ELBOW]
+            right_elbow = pose_landmarks[RIGHT_ElBOW]
 
             if frame_index % 10 == 0:
                 left_hand_roi = initialize_hand_roi(frame, left_wrist, left_elbow, width, height)
@@ -144,15 +207,46 @@ def main(video_path):
     left_hand_landmarker.close()
     right_hand_landmarker.close()
     cv2.destroyAllWindows()
-    output = {
+
+    return {
+        "id": attempt_id,
+        "source_video": video_path,
         "fps": 30,
         "frame_count": len(frames),
         "frames": frames
     }
 
-    with open("./data/climb_motion.json", "w") as f:
+
+def main(video_paths):
+    video_paths = video_paths[:MAX_ATTEMPTS]
+    board_homography = create_board_homography(SESSION_METADATA)
+    attempts = []
+
+    for index, video_path in enumerate(video_paths, start=1):
+        attempt = process_video(video_path, f"attempt_{index}", board_homography)
+        if attempt is not None:
+            attempts.append(attempt)
+
+    output = {
+        "session": SESSION_METADATA,
+        "attempt_count": len(attempts),
+        "attempts": attempts
+    }
+
+    with open("./data/climb_attempts.json", "w") as f:
         json.dump(output, f)
+
+    if attempts:
+        legacy_output = {
+            "fps": attempts[0]["fps"],
+            "frame_count": attempts[0]["frame_count"],
+            "frames": attempts[0]["frames"]
+        }
+
+        with open("./data/climb_motion.json", "w") as f:
+            json.dump(legacy_output, f)
 
 
 if __name__ == "__main__":
-    main("./data/j.mp4")
+    video_paths = sys.argv[1:] or DEFAULT_VIDEO_PATHS
+    main(video_paths)
