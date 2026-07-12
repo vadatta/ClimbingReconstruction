@@ -27,7 +27,7 @@ export function createPoseSkeleton(app){
 
         // create vector filter
         app.pose_filters.push(
-            new OneEuroVec3(0.7, 0.05, 1.0)
+            new OneEuroVec3(0.25, 0.005, 0.6)
         );
 
         // Old landmark sphere debug view:

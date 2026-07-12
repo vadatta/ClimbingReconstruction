@@ -10,24 +10,40 @@ const app = {};
 async function main(){
     const layout = createLayout();
     app.viewer = layout.viewer;
-    app.frame_count = 0;
-    const response = await fetch("/data/climb_motion.json");
+    layout.onAnalyze(async (selection) => {
+        layout.setStatus("Loading reconstruction preview...");
 
-    const data = await response.json();
-    app.raw_data = data;
+        try {
+            if (!app.initialized) {
+                const response = await fetch("/data/climb_motion.json");
+                if (!response.ok) {
+                    throw new Error(`Could not load motion data (${response.status})`);
+                }
 
+                app.raw_data = await response.json();
+                app.frame_count = 0;
+                layout.showAnalysis(selection);
 
-    initScene(app);
-    addHelpers(app);
-    addGripOverlay(app);
+                initScene(app);
+                addHelpers(app);
+                addGripOverlay(app);
+                createPoseSkeleton(app);
+                animate(app);
+                app.initialized = true;
+            } else {
+                app.frame_count = 0;
+                layout.showAnalysis(selection);
+            }
 
+            layout.setStatus("");
+        } catch (error) {
+            layout.setStatus(error.message);
+        }
+    });
 
-    await createPoseSkeleton(app);
-    // Hand landmark spheres are disabled while the main view uses body limb cylinders.
-    // await createHandSkeletons(app);
-
-
-    animate(app);
+    document.getElementById("new-attempt-button").addEventListener("click", () => {
+        layout.showSetup();
+    });
 
 }
 

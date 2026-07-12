@@ -3,9 +3,9 @@ import * as THREE from "three";
 const LEFT_HIP = 23;
 const RIGHT_HIP = 24;
 const POSE_SCALE = 2.6;
-const BONE_POSITION_ALPHA = 0.25;
-const BONE_LENGTH_ALPHA = 0.2;
-const BONE_ROTATION_ALPHA = 0.18;
+const BONE_POSITION_ALPHA = 0.12;
+const BONE_LENGTH_ALPHA = 0.1;
+const BONE_ROTATION_ALPHA = 0.08;
 const UP = new THREE.Vector3(0, 1, 0);
 
 export function updateFrame(app){

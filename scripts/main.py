@@ -30,7 +30,8 @@ RIGHT_ElBOW = 14
 def setup_landmarker(pose_path, hand_path):
     # Base model options
     base_options = python.BaseOptions(
-        model_asset_path=pose_path
+        model_asset_path=pose_path,
+        delegate=python.BaseOptions.Delegate.CPU
     )
 
     # Pose-specific options
@@ -49,7 +50,8 @@ def setup_landmarker(pose_path, hand_path):
     )
 
     hand_base = python.BaseOptions(
-        model_asset_path=hand_path
+        model_asset_path=hand_path,
+        delegate=python.BaseOptions.Delegate.CPU
     )
 
     hand_options = vision.HandLandmarkerOptions(
