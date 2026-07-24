@@ -2,14 +2,10 @@ import math
 
 from PIL import Image
 
-from config import CONFIG
 from dataCleaning import val_transform
 
 import cv2
 
-
-LEFT_WRIST = 15
-RIGHT_WRIST = 16
 
 def initialize_hand_roi(frame, wrist, elbow, width, height):
     forearm_x = wrist.x - elbow.x
@@ -56,16 +52,13 @@ def initialize_hand_roi(frame, wrist, elbow, width, height):
     ymin = max(0, min(y1, y2, y3, y4))
     ymax = min(height, max(y1, y2, y3, y4))
 
+    if xmin >= xmax or ymin >= ymax:
+        return None
+
     roi_frame = frame[ymin:ymax, xmin:xmax]
     roi_rgb = cv2.cvtColor(roi_frame, cv2.COLOR_BGR2RGB)
     roi_pil = Image.fromarray(roi_rgb)
 
     input_tensor = val_transform(roi_pil).unsqueeze(0)
-    input_tensor = input_tensor.to(CONFIG["device"])
-    #if frame_index % 8 == 0:
-        #roi_frame = frame[ymin:ymax, xmin:xmax]
-        #roi = cv2.resize(roi_frame, (128, 128))
-
-        #cv2.imwrite(f"dataset/raw/frameM_{frame_index}.png", roi)
 
     return input_tensor
